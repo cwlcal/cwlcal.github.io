@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>소음성난청 계산기</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#111;
+      --muted:#666;
+      --line:#1aa0a0;
+      --card:#f7fbfb;
+      --input:#e7ffff;
+      --btn:#0c7f7f;
+      --btnText:#fff;
+      --danger:#c1121f;
+      --shadow: 0 10px 30px rgba(0,0,0,.08);
+      --radius: 16px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: "돋움", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    header{
+      position: sticky;
+      top:0;
+      z-index:10;
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(0,0,0,.06);
+    }
+    .wrap{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 14px 14px;
+    }
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .brand{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      line-height:1.1;
+    }
+    .brand .t1{ font-weight:800; font-size: 16px; }
+    .brand .t2{ font-size: 12px; color:var(--muted); }
+    .navbtns{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .btn{
+      border:none;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight:800;
+      background: var(--btn);
+      color: var(--btnText);
+      cursor:pointer;
+      box-shadow: 0 8px 18px rgba(12,127,127,.20);
+    }
+    .btn.secondary{
+      background: #e9f3f3;
+      color:#0b5e5e;
+      box-shadow:none;
+      border:1px solid rgba(0,0,0,.08);
+    }
+    .btn.ghost{
+      background: transparent;
+      color:#0b5e5e;
+      box-shadow:none;
+      border:1px solid rgba(12,127,127,.25);
+    }
+
+    /* ✅ footer 제거했으니 여백도 줄임 */
+    main .wrap{
+      padding-top: 18px;
+      padding-bottom: 30px;
+    }
+
+    .page{ display:none; }
+    .page.active{ display:block; }
+
+    .hero{
+      background: linear-gradient(180deg, #f2ffff, #ffffff);
+      border:1px solid rgba(0,0,0,.06);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .hero h1{ margin:0 0 8px 0; font-size: 20px; }
+    .hero p{
+      margin:0;
+      color:var(--muted);
+      font-weight:600;
+      line-height:1.5;
+      font-size: 14px;
+    }
+    .toc{
+      margin-top: 14px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 620px){
+      .toc{ grid-template-columns: 1fr; }
+    }
+    .tocCard{
+      background: var(--card);
+      border:1px solid rgba(0,0,0,.06);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height: 140px;
+    }
+    .tocCard .title{ font-weight:900; font-size: 16px; }
+    .tocCard .desc{
+      color:var(--muted);
+      font-weight:600;
+      line-height:1.5;
+      font-size: 13px;
+      flex:1;
+    }
+
+    .sectionTitle{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:10px;
+      margin: 8px 0 12px 0;
+    }
+    .sectionTitle h2{
+      margin:0;
+      font-size: 18px;
+      font-weight:900;
+    }
+    .sectionTitle .sub{
+      margin:0;
+      color:var(--muted);
+      font-weight:700;
+      font-size: 12px;
+    }
+
+    .card{
+      background: var(--card);
+      border:1px solid rgba(0,0,0,.06);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+    .line{
+      height:2px;
+      background: var(--line);
+      opacity:.7;
+      border-radius:999px;
+      margin: 14px 0;
+    }
+
+    .grid{ display:grid; gap: 10px; }
+    .grid.cols4{ grid-template-columns: repeat(4, minmax(0,1fr)); }
+    .grid.cols3{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+    @media (max-width: 720px){
+      .grid.cols4{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+      .grid.cols3{ grid-template-columns: repeat(1, minmax(0,1fr)); }
+    }
+
+    .field label{
+      display:block;
+      font-weight:900;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .input{
+      width:100%;
+      height: 34px;
+      border-radius: 12px;
+      border:1px solid rgba(0,0,0,.10);
+      background: var(--input);
+      padding: 6px 10px;
+      font-size: 14px;
+      outline:none;
+
+      user-select:text;
+      -webkit-user-select:text;
+      pointer-events:auto;
+      appearance: none;
+      -webkit-appearance: none;
+
+      min-width: 0;
+      max-width: 100%;
+    }
+    .input[readonly]{
+      background:#eef7f7;
+      color:#0b5e5e;
+      font-weight:900;
+    }
+    .help{
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight:700;
+    }
+
+    .resultBox{
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      border:1px dashed rgba(12,127,127,.35);
+      background: #ffffff;
+      font-weight:900;
+      line-height:1.4;
+    }
+    .resultBox .muted{
+      color: var(--muted);
+      font-weight:800;
+      font-size: 12px;
+      margin-top: 6px;
+      white-space: pre-wrap;
+    }
+    .err{
+      color: var(--danger);
+      font-weight:900;
+      margin-top: 10px;
+    }
+
+    /* -----------------------------
+       6분법 (모바일 오버플로우 해결)
+    ----------------------------- */
+
+    .sessions{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 12px;
+      position: relative;
+      z-index: 2;
+    }
+    @media (min-width: 1400px){
+      .sessions{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+    }
+    @media (max-width: 980px){
+      .sessions{ grid-template-columns: 1fr; }
+    }
+
+    .sessionCard{
+      background:#fff;
+      border:1px solid rgba(0,0,0,.07);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow);
+      position: relative;
+      z-index: 2;
+    }
+    .sessionHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin-bottom: 10px;
+    }
+    .sessionHead .sTitle{ font-weight:1000; font-size: 16px; }
+
+    /* ✅ 모바일에서도 좌/우 2칸 유지 */
+    .pair{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .earBlock{
+      background: var(--card);
+      border:1px solid rgba(0,0,0,.06);
+      border-radius: 14px;
+      padding: 12px;
+      min-width: 0;
+      overflow: hidden;
+      position: relative;
+      z-index: 3;
+    }
+    .earBlock .earTitle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom: 8px;
+      font-weight:1000;
+    }
+    .freqGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    /* ✅ 핵심: 입력칸은 minmax(0,1fr)로 줄어들게 */
+    .row{
+      display:grid;
+      grid-template-columns: 58px minmax(0, 1fr);
+      gap: 10px;
+      align-items:center;
+      min-width: 0;
+    }
+    .row .freq{
+      font-weight:900;
+      color:#0b5e5e;
+      white-space:nowrap;
+    }
+    .row input.input{
+      min-width: 0 !important;
+      max-width: 100%;
+      width: 100%;
+      justify-self: stretch;
+    }
+
+    @media (max-width: 520px){
+      .pair{ gap: 8px; }
+      .earBlock{ padding: 10px; }
+      .row{ grid-template-columns: 52px minmax(0, 1fr); gap: 8px; }
+      .row .freq{ font-size: 13px; }
+      .input{ height: 32px; padding: 6px 8px; font-size: 13px; }
+      .sessionCard{ padding: 12px; }
+    }
+    @media (max-width: 390px){
+      .pair{ gap: 6px; }
+      .row{ grid-template-columns: 48px minmax(0, 1fr); gap: 6px; }
+      .row .freq{ font-size: 12px; }
+      .input{ height: 30px; padding: 5px 7px; font-size: 12px; border-radius: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="topbar">
+        <div class="brand">
+          <div class="t1">소음성난청 계산기</div>
+          <div class="t2">목차 → 계산기 선택 (PC/모바일 반응형)</div>
+        </div>
+        <div class="navbtns">
+          <button class="btn secondary" id="btnHome">목차</button>
+          <button class="btn ghost" id="btnPrint">인쇄</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <!-- HOME -->
+      <section class="page active" id="page-home">
+        <div class="hero">
+          <h1>처음 화면(목차)</h1>
+          <p>
+            아래 버튼을 눌러 원하는 계산기로 이동하세요.<br/>
+            ※ 숫자는 공백/콤마(예: 1,000) 입력도 가능합니다.
+          </p>
+
+          <div class="toc">
+            <div class="tocCard">
+              <div class="title">① 장해등급 계산기</div>
+              <div class="desc">
+                좌/우 dB, 좌/우 어음명료도(%)를 입력하면<br/>
+                테이블 기준으로 급수를 표시합니다.
+              </div>
+              <button class="btn" data-go="grade">장해등급 계산기 열기</button>
+            </div>
+
+            <div class="tocCard">
+              <div class="title">② 6분법 평균 계산기</div>
+              <div class="desc">
+                1~3회차, 좌/우 각각 500/1000/2000/4000Hz 입력 →<br/>
+                6분법 평균(내림, 최대 100) 자동 계산
+              </div>
+              <button class="btn" data-go="six">6분법 평균 계산기 열기</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- GRADE -->
+      <section class="page" id="page-grade">
+        <div class="sectionTitle">
+          <div>
+            <h2>※ 소음성 난청 장해등급 계산기</h2>
+            <p class="sub">입력 즉시 계산됩니다. (Enter를 누르면 오류를 팝업으로도 안내)</p>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn secondary" id="btnGradeClear">초기화</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="grid cols4">
+            <div class="field">
+              <label for="ldb">좌 dB</label>
+              <input class="input" id="ldb" inputmode="decimal" placeholder="예: 60" />
+              <div class="help">숫자만</div>
+            </div>
+            <div class="field">
+              <label for="rdb">우 dB</label>
+              <input class="input" id="rdb" inputmode="decimal" placeholder="예: 50" />
+              <div class="help">숫자만</div>
+            </div>
+            <div class="field">
+              <label for="lsp">좌 어음(%)</label>
+              <input class="input" id="lsp" inputmode="decimal" placeholder="예: 70 또는 0.7" />
+              <div class="help">70(%) 또는 0.7(비율)</div>
+            </div>
+            <div class="field">
+              <label for="rsp">우 어음(%)</label>
+              <input class="input" id="rsp" inputmode="decimal" placeholder="예: 50 또는 0.5" />
+              <div class="help">둘 중 큰 값 적용</div>
+            </div>
+          </div>
+
+          <div class="line"></div>
+
+          <div class="grid cols3">
+            <div class="field">
+              <label for="usedSp">적용 어음(%)</label>
+              <input class="input" id="usedSp" readonly />
+              <div class="help">입력된 좌/우 어음 중 큰 값</div>
+            </div>
+            <div class="field" style="grid-column: span 2;">
+              <label>결과</label>
+              <div class="resultBox" id="gradeResult">
+                값이 입력되면 결과가 표시됩니다.
+                <div class="muted" id="gradeDetail"></div>
+              </div>
+              <div class="err" id="gradeErr" style="display:none;"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SIX -->
+      <section class="page" id="page-six">
+        <div class="sectionTitle">
+          <div>
+            <h2>※ 6분법 평균 계산</h2>
+            <p class="sub">각 칸에 숫자를 입력하면 평균(내림) 결과가 자동 반영됩니다.</p>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn secondary" id="btnSixClear">초기화</button>
+          </div>
+        </div>
+
+        <div class="sessions" id="sixContainer"></div>
+
+        <div style="margin-top:14px; color:var(--muted); font-weight:700; font-size:12px;">
+          ※ 계산식: (500 + 1000×2 + 2000×2 + 4000) ÷ 6, 소수점 내림, 최대 100
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // -----------------------------
+    // routing
+    // -----------------------------
+    const pages = {
+      home: document.getElementById("page-home"),
+      grade: document.getElementById("page-grade"),
+      six: document.getElementById("page-six"),
+    };
+
+    function go(pageKey){
+      Object.values(pages).forEach(p => p.classList.remove("active"));
+      (pages[pageKey] || pages.home).classList.add("active");
+      history.replaceState({}, "", "#" + pageKey);
+      window.scrollTo({ top: 0, behavior: "auto" });
+    }
+
+    function syncFromHash(){
+      const key = (location.hash || "#home").replace("#","");
+      if (!pages[key]) return go("home");
+      go(key);
+    }
+
+    document.getElementById("btnHome").addEventListener("click", () => go("home"));
+    document.querySelectorAll("[data-go]").forEach(btn=>{
+      btn.addEventListener("click", () => go(btn.getAttribute("data-go")));
+    });
+
+    window.addEventListener("hashchange", syncFromHash);
+    document.getElementById("btnPrint").addEventListener("click", () => window.print());
+
+    // -----------------------------
+    // 공용 유틸
+    // -----------------------------
+    function toFloat(s){
+      s = (s ?? "").toString().trim();
+      if(!s) return null;
+      s = s.replaceAll(",", "");
+      const v = Number(s);
+      return Number.isFinite(v) ? v : null;
+    }
+    function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+    // -----------------------------
+    // 1) 장해등급 로직
+    // -----------------------------
+    const DB_LEVELS = [0, 40, 50, 60, 70, 80, 90];
+    const SPEECH_LEVELS = [0.3, 0.5, 0.7, 1.0];
+
+    const RESULT_MATRIX = [
+      [
+        ["무장해","무장해","무장해","무장해"],
+        ["제14급 제1호","제14급 제1호","제14급 제1호","제14급 제1호"],
+        ["제11급 제4호","제11급 제4호","제14급 제1호","제14급 제1호"],
+        ["제11급 제4호","제11급 제4호","제14급 제1호","제14급 제1호"],
+        ["제11급 제4호","제11급 제4호","제11급 제4호","제11급 제4호"],
+        ["제10급 제6호","제10급 제6호","제10급 제6호","제10급 제6호"],
+        ["제9급 제9호","제9급 제9호","제9급 제9호","제9급 제9호"]
+      ],
+      [
+        ["제14급 제14호","제14급 제14호","제14급 제14호","제14급 제14호"],
+        ["제10급 제7호","제10급 제7호","제10급 제7호","제11급 제5호"],
+        ["제10급 제7호","제10급 제7호","제10급 제7호","제11급 제5호"],
+        ["제10급 제7호","제10급 제7호","제10급 제7호","제11급 제5호"],
+        ["제10급 제7호","제10급 제7호","제10급 제7호","제11급 제4호"],
+        ["제10급 제6호","제10급 제6호","제10급 제6호","제10급 제6호"],
+        ["제9급 제9호","제9급 제9호","제9급 제9호","제9급 제9호"]
+      ],
+      [
+        ["제11급 제4호","제11급 제4호","제14급 제1호","제14급 제1호"],
+        ["제10급 제7호","제10급 제7호","제10급 제7호","제11급 제5호"],
+        ["제6급 제3호","제7급 제2호","제9급 제7호","제10급 제7호"],
+        ["제6급 제3호","제7급 제2호","제9급 제7호","제10급 제7호"],
+        ["제6급 제3호","제7급 제2호","제9급 제7호","제10급 제7호"],
+        ["제6급 제3호","제7급 제2호","제9급 제7호","제9급 제8호"],
+        ["제6급 제3호","제7급 제2호","제9급 제7호","제9급 제8호"]
+      ],
+      [
+        ["제11급 제4호","제11급 제4호","제14급 제1호","제14급 제1호"],
+        ["제10급 제7호","제10급 제7호","제10급 제7호","제11급 제5호"],
+        ["제6급 제3호","제7급 제2호","제9급 제7호","제10급 제7호"],
+        ["제6급 제3호","제7급 제2호","제9급 제7호","제9급 제7호"],
+        ["제6급 제3호","제7급 제2호","제9급 제7호","제9급 제7호"],
+        ["제6급 제3호","제7급 제2호","제9급 제7호","제9급 제7호"],
+        ["제6급 제3호","제7급 제2호","제7급 제3호","제7급 제3호"]
+      ],
+      [
+        ["제11급 제4호","제11급 제4호","제11급 제4호","제11급 제4호"],
+        ["제10급 제7호","제10급 제7호","제10급 제7호","제11급 제4호"],
+        ["제6급 제3호","제7급 제2호","제9급 제7호","제10급 제7호"],
+        ["제6급 제3호","제7급 제2호","제9급 제7호","제9급 제7호"],
+        ["제6급 제3호","제7급 제2호","제7급 제2호","제7급 제2호"],
+        ["제6급 제3호","제7급 제2호","제7급 제2호","제7급 제2호"],
+        ["제6급 제3호","제6급 제4호","제6급 제4호","제6급 제4호"]
+      ],
+      [
+        ["제10급 제6호","제10급 제6호","제10급 제6호","제10급 제6호"],
+        ["제10급 제6호","제10급 제6호","제10급 제6호","제10급 제6호"],
+        ["제6급 제3호","제7급 제2호","제9급 제7호","제9급 제8호"],
+        ["제6급 제3호","제7급 제2호","제9급 제7호","제9급 제7호"],
+        ["제6급 제3호","제7급 제2호","제7급 제2호","제7급 제2호"],
+        ["제4급 제3호","제6급 제3호","제6급 제3호","제6급 제3호"],
+        ["제4급 제3호","제6급 제3호","제6급 제3호","제6급 제3호"]
+      ],
+      [
+        ["제9급 제9호","제9급 제9호","제9급 제9호","제9급 제9호"],
+        ["제9급 제9호","제9급 제9호","제9급 제9호","제9급 제9호"],
+        ["제6급 제3호","제7급 제2호","제9급 제7호","제9급 제8호"],
+        ["제6급 제3호","제7급 제2호","제7급 제3호","제7급 제3호"],
+        ["제6급 제3호","제6급 제4호","제6급 제4호","제6급 제4호"],
+        ["제4급 제3호","제6급 제3호","제6급 제3호","제6급 제3호"],
+        ["제4급 제3호","제4급 제3호","제4급 제3호","제4급 제3호"]
+      ]
+    ];
+
+    function bucketFloor(value, levels){
+      let i = 0;
+      for(let k=0;k<levels.length;k++){
+        if(levels[k] <= value) i = k;
+      }
+      i = clamp(i, 0, levels.length-1);
+      return { bucket: levels[i], idx: i };
+    }
+    function bucketCeil(value, levels){
+      let i = levels.length-1;
+      for(let k=0;k<levels.length;k++){
+        if(levels[k] >= value){ i = k; break; }
+      }
+      i = clamp(i, 0, levels.length-1);
+      return { bucket: levels[i], idx: i };
+    }
+    function speechToFraction(x){
+      let frac = (x <= 1.0) ? x : (x / 100.0);
+      return clamp(frac, 0.0, 1.0);
+    }
+
+    const elLdb = document.getElementById("ldb");
+    const elRdb = document.getElementById("rdb");
+    const elLsp = document.getElementById("lsp");
+    const elRsp = document.getElementById("rsp");
+    const elUsedSp = document.getElementById("usedSp");
+    const elGradeResult = document.getElementById("gradeResult");
+    const elGradeDetail = document.getElementById("gradeDetail");
+    const elGradeErr = document.getElementById("gradeErr");
+
+    function setGradeMessage(msg, detail=""){
+      elGradeResult.firstChild.textContent = msg;
+      elGradeDetail.textContent = detail;
+    }
+    function showGradeErr(msg, popup=false){
+      elGradeErr.style.display = "block";
+      elGradeErr.textContent = msg;
+      setGradeMessage("입력 오류가 있습니다.", "");
+      elUsedSp.value = "";
+      if(popup) alert(msg);
+    }
+    function clearGradeErr(){
+      elGradeErr.style.display = "none";
+      elGradeErr.textContent = "";
+    }
+
+    function calcGrade(showPopup=false){
+      clearGradeErr();
+
+      const rawPairs = [
+        [elLdb.value, "좌 dB"],
+        [elRdb.value, "우 dB"],
+        [elLsp.value, "좌 어음명료도"],
+        [elRsp.value, "우 어음명료도"],
+      ];
+      for(const [raw,name] of rawPairs){
+        if(raw.trim() && toFloat(raw) === null){
+          return showGradeErr(`${name} : 숫자만 입력하세요.`, showPopup);
+        }
+      }
+
+      const ldb = toFloat(elLdb.value);
+      const rdb = toFloat(elRdb.value);
+      const lsp = toFloat(elLsp.value);
+      const rsp = toFloat(elRsp.value);
+
+      if(ldb === null || rdb === null || (lsp === null && rsp === null)){
+        setGradeMessage("값이 입력되면 결과가 표시됩니다.", "");
+        elUsedSp.value = "";
+        return;
+      }
+
+      const usedSp = Math.max(...[lsp, rsp].filter(v => v !== null));
+      const usedFrac = speechToFraction(usedSp);
+      elUsedSp.value = String(Math.round(usedFrac * 100));
+
+      const ldbB = bucketFloor(clamp(ldb, 0, 9999), DB_LEVELS);
+      const rdbB = bucketFloor(clamp(rdb, 0, 9999), DB_LEVELS);
+      const spB  = bucketCeil(usedFrac, SPEECH_LEVELS);
+
+      const result = RESULT_MATRIX[rdbB.idx][ldbB.idx][spB.idx];
+
+      setGradeMessage(
+        `해당 급수는: ${result}`,
+        `(좌 ${ldbB.bucket}dB / 우 ${rdbB.bucket}dB / 어음 ${Math.round(spB.bucket*100)}%)`
+      );
+    }
+
+    [elLdb, elRdb, elLsp, elRsp].forEach(el=>{
+      el.addEventListener("input", () => calcGrade(false));
+      el.addEventListener("keydown", (e)=>{
+        if(e.key === "Enter"){
+          e.preventDefault();
+          calcGrade(true);
+        }
+      });
+    });
+
+    document.getElementById("btnGradeClear").addEventListener("click", ()=>{
+      [elLdb, elRdb, elLsp, elRsp].forEach(el => el.value = "");
+      elUsedSp.value = "";
+      clearGradeErr();
+      setGradeMessage("값이 입력되면 결과가 표시됩니다.", "");
+      elLdb.focus();
+    });
+
+    // -----------------------------
+    // 2) 6분법 UI + 탭 순서
+    // -----------------------------
+    const sixContainer = document.getElementById("sixContainer");
+    const freqs = ["500Hz", "1000Hz", "2000Hz", "4000Hz"];
+
+    function makeInput(id){
+      const inp = document.createElement("input");
+      inp.type = "text";
+      inp.className = "input";
+      inp.id = id;
+      inp.inputMode = "decimal";
+      inp.placeholder = "0";
+      return inp;
+    }
+
+    function safeNum(v){
+      const x = toFloat(v);
+      if(x === null) return 0;
+      return Math.max(0, x);
+    }
+
+    function calcSixBlock(blockEl){
+      const inputs = freqs.map((_,i)=> blockEl.querySelector(`[data-f="${i}"]`));
+      const out = blockEl.querySelector(`[data-out="1"]`);
+
+      const v1 = safeNum(inputs[0].value);
+      const v2 = safeNum(inputs[1].value);
+      const v3 = safeNum(inputs[2].value);
+      const v4 = safeNum(inputs[3].value);
+
+      let result = (v1 + v2*2 + v3*2 + v4) / 6;
+      result = Math.floor(result);
+      result = Math.min(result, 100);
+
+      out.value = String(result);
+    }
+
+    function buildSixUI(){
+      const sessions = [
+        { n: 1, leftId: "s1L", rightId: "s1R" },
+        { n: 2, leftId: "s2L", rightId: "s2R" },
+        { n: 3, leftId: "s3L", rightId: "s3R" },
+      ];
+
+      let tabCounter = 1;
+
+      sessions.forEach(s=>{
+        const sessionCard = document.createElement("div");
+        sessionCard.className = "sessionCard";
+
+        const head = document.createElement("div");
+        head.className = "sessionHead";
+        head.innerHTML = `<div class="sTitle">${s.n}회차</div><div style="color:var(--muted); font-weight:800; font-size:12px;">좌/우 입력</div>`;
+        sessionCard.appendChild(head);
+
+        const pair = document.createElement("div");
+        pair.className = "pair";
+
+        const makeEar = (label, key) => {
+          const ear = document.createElement("div");
+          ear.className = "earBlock";
+
+          const title = document.createElement("div");
+          title.className = "earTitle";
+          title.innerHTML = `<span>${label}</span><span style="font-weight:1000; color:#0b5e5e;">결과</span>`;
+          ear.appendChild(title);
+
+          const fg = document.createElement("div");
+          fg.className = "freqGrid";
+
+          freqs.forEach((f, i)=>{
+            const row = document.createElement("div");
+            row.className = "row";
+
+            const left = document.createElement("div");
+            left.className = "freq";
+            left.textContent = f;
+
+            const inp = makeInput(`${key}_${i}`);
+            inp.setAttribute("data-f", String(i));
+            inp.tabIndex = tabCounter++;
+
+            row.appendChild(left);
+            row.appendChild(inp);
+            fg.appendChild(row);
+          });
+
+          const rowOut = document.createElement("div");
+          rowOut.className = "row";
+
+          const outLabel = document.createElement("div");
+          outLabel.className = "freq";
+          outLabel.textContent = "평균";
+
+          const out = document.createElement("input");
+          out.type = "text";
+          out.className = "input";
+          out.setAttribute("data-out", "1");
+          out.readOnly = true;
+          out.tabIndex = -1;
+
+          rowOut.appendChild(outLabel);
+          rowOut.appendChild(out);
+          fg.appendChild(rowOut);
+
+          ear.appendChild(fg);
+
+          ear.querySelectorAll("input[data-f]").forEach(inp=>{
+            inp.addEventListener("input", ()=> calcSixBlock(ear));
+          });
+
+          return ear;
+        };
+
+        pair.appendChild(makeEar("좌", s.leftId));
+        pair.appendChild(makeEar("우", s.rightId));
+
+        sessionCard.appendChild(pair);
+        sixContainer.appendChild(sessionCard);
+      });
+    }
+
+    buildSixUI();
+
+    // ✅ 포커스 안전장치
+    sixContainer.addEventListener("pointerdown", (e) => {
+      const t = e.target;
+      if (t && t.tagName === "INPUT" && !t.readOnly) t.focus();
+    }, { passive: true });
+
+    document.getElementById("btnSixClear").addEventListener("click", ()=>{
+      sixContainer.querySelectorAll("input.input:not([readonly])").forEach(inp => inp.value = "");
+      sixContainer.querySelectorAll(".earBlock").forEach(block => calcSixBlock(block));
+      const first = sixContainer.querySelector("input.input:not([readonly])");
+      if(first) first.focus();
+    });
+
+    // 초기 결과 0
+    sixContainer.querySelectorAll(".earBlock").forEach(block => calcSixBlock(block));
+
+    // 최초 진입
+    syncFromHash();
+  </script>
+</body>
+</html>
