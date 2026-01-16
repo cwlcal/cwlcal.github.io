@@ -87,7 +87,6 @@
       border:1px solid rgba(12,127,127,.25);
     }
 
-    /* ✅ footer 제거했으니 여백도 줄임 */
     main .wrap{
       padding-top: 18px;
       padding-bottom: 30px;
@@ -177,9 +176,12 @@
     .grid{ display:grid; gap: 10px; }
     .grid.cols4{ grid-template-columns: repeat(4, minmax(0,1fr)); }
     .grid.cols3{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .grid.cols2{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+
     @media (max-width: 720px){
       .grid.cols4{ grid-template-columns: repeat(2, minmax(0,1fr)); }
       .grid.cols3{ grid-template-columns: repeat(1, minmax(0,1fr)); }
+      .grid.cols2{ grid-template-columns: repeat(1, minmax(0,1fr)); }
     }
 
     .field label{
@@ -213,6 +215,11 @@
       color:#0b5e5e;
       font-weight:900;
     }
+    select.input{
+      padding-right: 30px;
+      cursor:pointer;
+    }
+
     .help{
       margin-top: 6px;
       color: var(--muted);
@@ -278,7 +285,6 @@
     }
     .sessionHead .sTitle{ font-weight:1000; font-size: 16px; }
 
-    /* ✅ 모바일에서도 좌/우 2칸 유지 */
     .pair{
       display:grid;
       grid-template-columns: 1fr 1fr;
@@ -309,7 +315,6 @@
       min-width: 0;
     }
 
-    /* ✅ 핵심: 입력칸은 minmax(0,1fr)로 줄어들게 */
     .row{
       display:grid;
       grid-template-columns: 58px minmax(0, 1fr);
@@ -329,6 +334,13 @@
       justify-self: stretch;
     }
 
+    /* ✅ PC에서 6분법 입력칸(특히 평균 출력) 3자리(100)도 보이도록 "아주 조금" 넓힘 */
+    @media (min-width: 521px){
+      #page-six .row input.input{
+        min-width: 92px; /* 100도 안전 */
+      }
+    }
+
     @media (max-width: 520px){
       .pair{ gap: 8px; }
       .earBlock{ padding: 10px; }
@@ -343,8 +355,72 @@
       .row .freq{ font-size: 12px; }
       .input{ height: 30px; padding: 5px 7px; font-size: 12px; border-radius: 10px; }
     }
+
+    /* -----------------------------
+       장해 일시금·연금 계산기 (웹용 레이아웃)
+    ----------------------------- */
+    .jhLayout{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items:start;
+    }
+    @media (max-width: 900px){
+      .jhLayout{ grid-template-columns: 1fr; }
+    }
+    .jhCard{
+      background:#fff;
+      border:1px solid rgba(0,0,0,.07);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow);
+    }
+    .jhTitle{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom: 10px;
+    }
+    .jhTitle .t{ font-weight:1000; font-size: 16px; }
+    .jhTitle .s{ color:var(--muted); font-weight:800; font-size: 12px; }
+    .jhTable{
+      width:100%;
+      border-collapse: collapse;
+      overflow:hidden;
+      border-radius: 14px;
+      border:1px solid rgba(0,0,0,.06);
+      background: var(--card);
+    }
+    .jhTable th, .jhTable td{
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(0,0,0,.06);
+      font-size: 13px;
+      vertical-align: top;
+    }
+    .jhTable th{
+      text-align:left;
+      font-weight:1000;
+      color:#0b5e5e;
+      white-space:nowrap;
+      width: 42%;
+    }
+    .jhTable td{
+      text-align:right;
+      font-weight:900;
+      font-variant-numeric: tabular-nums;
+    }
+    .jhNote{
+      margin-top: 10px;
+      color: var(--muted);
+      font-weight:800;
+      font-size: 12px;
+      white-space: pre-wrap;
+      line-height:1.5;
+    }
   </style>
 </head>
+
 <body>
   <header>
     <div class="wrap">
@@ -389,6 +465,15 @@
                 6분법 평균(내림, 최대 100) 자동 계산
               </div>
               <button class="btn" data-go="six">6분법 평균 계산기 열기</button>
+            </div>
+
+            <div class="tocCard">
+              <div class="title">③ 장해 일시금·연금 계산기</div>
+              <div class="desc">
+                장해등급(1~14), 연금/일시금, 평균임금 입력 →<br/>
+                산정일수/지급액 및 비교(예상값) 표시
+              </div>
+              <button class="btn" data-go="janghae">장해 일시금·연금 계산기 열기</button>
             </div>
           </div>
         </div>
@@ -468,6 +553,130 @@
           ※ 계산식: (500 + 1000×2 + 2000×2 + 4000) ÷ 6, 소수점 내림, 최대 100
         </div>
       </section>
+
+      <!-- JANGHAE -->
+      <section class="page" id="page-janghae">
+        <div class="sectionTitle">
+          <div>
+            <h2>※ 장해 일시금·연금 계산기</h2>
+            <p class="sub">장해등급/연금·일시금/평균임금 입력 → 자동 계산 (모바일 지원)</p>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn secondary" id="btnJanghaeClear">초기화</button>
+          </div>
+        </div>
+
+        <div class="jhLayout">
+          <!-- 왼쪽(또는 상단): 메인 계산 -->
+          <div class="jhCard">
+            <div class="jhTitle">
+              <div class="t">기본 계산</div>
+              <div class="s">입력 즉시 반영</div>
+            </div>
+
+            <div class="grid cols3">
+              <div class="field">
+                <label for="jhGrade">장해등급</label>
+                <select class="input" id="jhGrade"></select>
+                <div class="help">1~14 (기본 14)</div>
+              </div>
+
+              <div class="field">
+                <label for="jhType">연금/일시금</label>
+                <select class="input" id="jhType">
+                  <option value="일시금" selected>일시금</option>
+                  <option value="연금">연금</option>
+                </select>
+                <div class="help">8급 이하는 연금 선택 불가</div>
+              </div>
+
+              <div class="field">
+                <label for="jhWage">평균임금</label>
+                <input class="input" id="jhWage" inputmode="decimal" placeholder="예: 100000" />
+                <div class="help">콤마 입력 가능</div>
+              </div>
+            </div>
+
+            <div class="line"></div>
+
+            <div class="grid cols3">
+              <div class="field">
+                <label for="jhDays">산정일수</label>
+                <input class="input" id="jhDays" readonly />
+                <div class="help">등급/옵션에 따라 결정</div>
+              </div>
+
+              <div class="field">
+                <label for="jhAmount" id="jhAmountLabel">장해 일시금</label>
+                <input class="input" id="jhAmount" readonly />
+                <div class="help">산정일수 × 평균임금</div>
+              </div>
+
+              <div class="field" id="jhMonthWrap" style="display:none;">
+                <label for="jhMonth" id="jhMonthLabel">매 월 지급액</label>
+                <input class="input" id="jhMonth" readonly />
+                <div class="help">연금(1년치) ÷ 12</div>
+              </div>
+            </div>
+
+            <div class="err" id="jhErr" style="display:none;"></div>
+
+            <div class="resultBox">
+              참고사항
+              <div class="muted" id="jhBigo">값이 입력되면 참고사항이 표시됩니다.</div>
+            </div>
+          </div>
+
+          <!-- 오른쪽(또는 하단): 비교(예상값) -->
+          <div class="jhCard">
+            <div class="jhTitle">
+              <div class="t">장해 일시금·연금 비교 (예상값)</div>
+              <div class="s">확장/축소 없이 한 화면</div>
+            </div>
+
+            <table class="jhTable">
+              <tbody>
+                <tr>
+                  <th>일시금 선택시 최종금액</th>
+                  <td id="jhCmpLump">-</td>
+                </tr>
+                <tr>
+                  <th>연금 선택시 (1년치)</th>
+                  <td id="jhCmpPensionYear">-</td>
+                </tr>
+                <tr>
+                  <th>→ 매 월</th>
+                  <td id="jhCmpPensionMonth">-</td>
+                </tr>
+                <tr>
+                  <th>연금 1년 선급</th>
+                  <td id="jhPre1">-</td>
+                </tr>
+                <tr>
+                  <th>연금 2년 선급</th>
+                  <td id="jhPre2">-</td>
+                </tr>
+                <tr>
+                  <th>연금 3년 선급</th>
+                  <td id="jhPre3">-</td>
+                </tr>
+                <tr>
+                  <th>연금 4년 선급</th>
+                  <td id="jhPre4">-</td>
+                </tr>
+                <tr>
+                  <th>선급 후 매 월 연금 지급액</th>
+                  <td id="jhPreMonth">-</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="jhNote" id="jhCmpNote">
+              ※ 본 화면은 질문에 주신 Tkinter 로직을 웹으로 옮긴 것입니다.
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   </main>
 
@@ -479,6 +688,7 @@
       home: document.getElementById("page-home"),
       grade: document.getElementById("page-grade"),
       six: document.getElementById("page-six"),
+      janghae: document.getElementById("page-janghae"),
     };
 
     function go(pageKey){
@@ -513,6 +723,15 @@
       return Number.isFinite(v) ? v : null;
     }
     function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+    function formatNum(x){
+      if (typeof x === "string") return x;
+      if (!Number.isFinite(x)) return "-";
+      const isInt = Math.abs(x - Math.round(x)) < 1e-9;
+      if (isInt) return Math.round(x).toLocaleString("ko-KR");
+      const s = x.toLocaleString("ko-KR", { maximumFractionDigits: 2 });
+      return s;
+    }
 
     // -----------------------------
     // 1) 장해등급 로직
@@ -559,7 +778,7 @@
       ],
       [
         ["제11급 제4호","제11급 제4호","제11급 제4호","제11급 제4호"],
-        ["제10급 제7호","제10급 제7호","제10급 제7호","제11급 제4호"],
+        ["제10급 제7호","제10급 제7호","제10급 제7호","제11급 제11호"],
         ["제6급 제3호","제7급 제2호","제9급 제7호","제10급 제7호"],
         ["제6급 제3호","제7급 제2호","제9급 제7호","제9급 제7호"],
         ["제6급 제3호","제7급 제2호","제7급 제2호","제7급 제2호"],
@@ -817,7 +1036,6 @@
 
     buildSixUI();
 
-    // ✅ 포커스 안전장치
     sixContainer.addEventListener("pointerdown", (e) => {
       const t = e.target;
       if (t && t.tagName === "INPUT" && !t.readOnly) t.focus();
@@ -830,13 +1048,217 @@
       if(first) first.focus();
     });
 
-    // 초기 결과 0
     sixContainer.querySelectorAll(".earBlock").forEach(block => calcSixBlock(block));
+
+    // -----------------------------
+    // 3) 장해 일시금·연금 계산기 (Tkinter 로직 웹 이식)
+    // -----------------------------
+    const elJhGrade = document.getElementById("jhGrade");
+    const elJhType = document.getElementById("jhType");
+    const elJhWage = document.getElementById("jhWage");
+    const elJhDays = document.getElementById("jhDays");
+    const elJhAmount = document.getElementById("jhAmount");
+    const elJhAmountLabel = document.getElementById("jhAmountLabel");
+    const elJhMonthWrap = document.getElementById("jhMonthWrap");
+    const elJhMonth = document.getElementById("jhMonth");
+    const elJhMonthLabel = document.getElementById("jhMonthLabel");
+    const elJhErr = document.getElementById("jhErr");
+    const elJhBigo = document.getElementById("jhBigo");
+
+    const elCmpLump = document.getElementById("jhCmpLump");
+    const elCmpPensionYear = document.getElementById("jhCmpPensionYear");
+    const elCmpPensionMonth = document.getElementById("jhCmpPensionMonth");
+    const elPre1 = document.getElementById("jhPre1");
+    const elPre2 = document.getElementById("jhPre2");
+    const elPre3 = document.getElementById("jhPre3");
+    const elPre4 = document.getElementById("jhPre4");
+    const elPreMonth = document.getElementById("jhPreMonth");
+
+    // 등급 리스트(14→1 역순)
+    (function initGradeOptions(){
+      for(let g=14; g>=1; g--){
+        const op = document.createElement("option");
+        op.value = String(g);
+        op.textContent = String(g);
+        elJhGrade.appendChild(op);
+      }
+      elJhGrade.value = "14";
+    })();
+
+    // Tkinter 코드 기반: (연금일수, 일시금일수)
+    const JH_MAP = {
+      1: { pensionDays: 329, lumpDays: 1474, prepay345Allowed: true,  prepayMonthFactorYears: 4 },
+      2: { pensionDays: 291, lumpDays: 1309, prepay345Allowed: true,  prepayMonthFactorYears: 1 },
+      3: { pensionDays: 257, lumpDays: 1155, prepay345Allowed: true,  prepayMonthFactorYears: 1 },
+      4: { pensionDays: 224, lumpDays: 1012, prepay345Allowed: false, prepayMonthFactorYears: 1 },
+      5: { pensionDays: 193, lumpDays: 869,  prepay345Allowed: false, prepayMonthFactorYears: 1 },
+      6: { pensionDays: 164, lumpDays: 737,  prepay345Allowed: false, prepayMonthFactorYears: 1 },
+      7: { pensionDays: 138, lumpDays: 616,  prepay345Allowed: false, prepayMonthFactorYears: 1 },
+      // 8~14: 연금 불가(일시금만)
+      8:  { pensionDays: null, lumpDays: 495 },
+      9:  { pensionDays: null, lumpDays: 385 },
+      10: { pensionDays: null, lumpDays: 297 },
+      11: { pensionDays: null, lumpDays: 220 },
+      12: { pensionDays: null, lumpDays: 154 },
+      13: { pensionDays: null, lumpDays: 99 },
+      14: { pensionDays: null, lumpDays: 55 },
+    };
+
+    function bigoText(grade, type){
+      grade = Number(grade);
+      if(grade >= 1 && grade <= 3){
+        if(type === "연금"){
+          return "  ※참고사항※\n\n  * 1급부터 3급까지는 장해연금으로 지급\n\n  * 연금으로 지급시, 연금 지급 당시 평균임금기준으로\n    산정";
+        }
+        return "  ※참고사항※\n\n  * 대한민국국민이 아니고 외국에서 거주하고 있는\n    근로자의 경우 '장해보상 일시금'으로 지급";
+      }
+      if(grade >= 4 && grade <= 7){
+        return "  ※참고사항※\n\n  * 장해4급~7급은 산재근로자의 선택에 따라\n    일시금 또는 연금으로 지급\n\n  * 연금으로 지급시, 연금 지급 당시 평균임금기준으로\n    산정";
+      }
+      // 8~14
+      if(type === "연금"){
+        return "  ※참고사항※\n\n  * 장해8급 이하는 연금 선택 불가\n\n  * 재요양 후 장해급여의 산정에 적용할 평균임금은\n    종전의 장해급여 산정에 적용된 평균임금의\n    증감한 금액으로 한다.\n    (재요양으로 산정된 평균임금으로 하지 않는다.)";
+      }
+      return "  ※참고사항※\n\n  * 장해8급 이하는 일시금만 선택 가능\n\n  * 재요양 후 장해급여의 산정에 적용할 평균임금은\n    종전의 장해급여 산정에 적용된 평균임금의\n    증감한 금액으로 한다.\n    (재요양으로 산정된 평균임금으로 하지 않는다.)";
+    }
+
+    function setJhErr(msg){
+      elJhErr.style.display = "block";
+      elJhErr.textContent = msg;
+    }
+    function clearJhErr(){
+      elJhErr.style.display = "none";
+      elJhErr.textContent = "";
+    }
+
+    function calcJanghae(){
+      clearJhErr();
+
+      const grade = Number(elJhGrade.value);
+      const type = elJhType.value; // "일시금" | "연금"
+      const wageRaw = elJhWage.value;
+
+      if(wageRaw.trim() && toFloat(wageRaw) === null){
+        setJhErr("평균임금 : 숫자만 입력하세요.");
+        return;
+      }
+
+      const wage = toFloat(wageRaw);
+      elJhBigo.textContent = bigoText(grade, type);
+
+      // 임금이 없으면 표시 초기화(참고사항만 보여줌)
+      if(wage === null){
+        elJhDays.value = "";
+        elJhAmount.value = "";
+        elJhMonth.value = "";
+        elJhMonthWrap.style.display = "none";
+        elJhAmountLabel.textContent = "장해 일시금";
+        // 비교도 초기화
+        elCmpLump.textContent = "-";
+        elCmpPensionYear.textContent = "-";
+        elCmpPensionMonth.textContent = "-";
+        elPre1.textContent = "-";
+        elPre2.textContent = "-";
+        elPre3.textContent = "-";
+        elPre4.textContent = "-";
+        elPreMonth.textContent = "-";
+        return;
+      }
+
+      const cfg = JH_MAP[grade];
+      const pensionAllowed = Number.isFinite(cfg?.pensionDays);
+
+      // 메인 출력
+      if(type === "연금" && !pensionAllowed){
+        elJhDays.value = "연금선택 불가";
+        elJhAmountLabel.textContent = "연금액(1년치)";
+        elJhAmount.value = "연금선택 불가";
+        elJhMonthWrap.style.display = "none";
+      } else if(type === "연금"){
+        elJhAmountLabel.textContent = "연금액(1년치)";
+        elJhDays.value = String(cfg.pensionDays);
+        const yearAmt = cfg.pensionDays * wage;
+        elJhAmount.value = formatNum(yearAmt);
+        elJhMonthWrap.style.display = "block";
+        elJhMonthLabel.textContent = "매 월 지급액";
+        elJhMonth.value = formatNum(yearAmt / 12);
+      } else {
+        elJhAmountLabel.textContent = "장해 일시금";
+        elJhDays.value = String(cfg.lumpDays);
+        elJhAmount.value = formatNum(cfg.lumpDays * wage);
+        elJhMonthWrap.style.display = "none";
+        elJhMonth.value = "";
+      }
+
+      // 비교(예상값)
+      const lumpTotal = cfg.lumpDays * wage;
+      elCmpLump.textContent = formatNum(lumpTotal);
+
+      if(!pensionAllowed){
+        elCmpPensionYear.textContent = "연금선택 불가";
+        elCmpPensionMonth.textContent = "연금선택 불가";
+        elPre1.textContent = "연금선택 불가";
+        elPre2.textContent = "연금선택 불가";
+        elPre3.textContent = "연금선택 불가";
+        elPre4.textContent = "연금선택 불가";
+        elPreMonth.textContent = "연금선택 불가";
+        return;
+      }
+
+      const pensionYear = cfg.pensionDays * wage;
+      elCmpPensionYear.textContent = formatNum(pensionYear);
+      elCmpPensionMonth.textContent = formatNum(pensionYear / 12);
+
+      // 선급 계산: Tkinter 로직 그대로 반영
+      const pre1 = (cfg.pensionDays * wage * 1) / 2;
+      const pre2 = (cfg.pensionDays * wage * 2) / 2;
+      const pre3 = (cfg.pensionDays * wage * 3) / 2;
+      const pre4 = (cfg.pensionDays * wage * 4) / 2;
+      const preMonth = (cfg.pensionDays * wage * (cfg.prepayMonthFactorYears ?? 1)) / 2 / 12;
+
+      elPre1.textContent = formatNum(pre1);
+      elPre2.textContent = formatNum(pre2);
+
+      if(cfg.prepay345Allowed === false){
+        elPre3.textContent = "선급 불가";
+        elPre4.textContent = "선급 불가";
+      } else {
+        elPre3.textContent = formatNum(pre3);
+        elPre4.textContent = formatNum(pre4);
+      }
+
+      elPreMonth.textContent = formatNum(preMonth);
+    }
+
+    // 이벤트 바인딩
+    [elJhGrade, elJhType, elJhWage].forEach(el=>{
+      el.addEventListener("input", calcJanghae);
+      el.addEventListener("change", calcJanghae);
+    });
+
+    document.getElementById("btnJanghaeClear").addEventListener("click", ()=>{
+      elJhGrade.value = "14";
+      elJhType.value = "일시금";
+      elJhWage.value = "";
+      clearJhErr();
+      elJhDays.value = "";
+      elJhAmount.value = "";
+      elJhMonth.value = "";
+      elJhMonthWrap.style.display = "none";
+      elJhBigo.textContent = "값이 입력되면 참고사항이 표시됩니다.";
+      elCmpLump.textContent = "-";
+      elCmpPensionYear.textContent = "-";
+      elCmpPensionMonth.textContent = "-";
+      elPre1.textContent = "-";
+      elPre2.textContent = "-";
+      elPre3.textContent = "-";
+      elPre4.textContent = "-";
+      elPreMonth.textContent = "-";
+      elJhWage.focus();
+    });
 
     // 최초 진입
     syncFromHash();
   </script>
 </body>
 </html>
-
-
