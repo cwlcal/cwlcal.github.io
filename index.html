@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>소음성난청 계산기</title>
+  <title>산업재해보상보험 청력 장해 계산기</title>
 
   <!-- ✅ Google AdSense (head에 삽입) -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1526124944243211"
@@ -487,7 +487,7 @@
 
           <div class="toc">
             <div class="tocCard">
-              <div class="title">① 장해등급 계산기</div>
+              <div class="title">① 청력 장해등급 계산기</div>
               <div class="desc">
                 좌/우 dB, 좌/우 어음명료도(%)를 입력하면<br/>
                 테이블 기준으로 급수를 표시합니다.
@@ -496,7 +496,7 @@
             </div>
 
             <div class="tocCard">
-              <div class="title">② 6분법 평균 계산기</div>
+              <div class="title">② 청력 6분법 평균 계산기</div>
               <div class="desc">
                 1~3회차, 좌/우 각각 500/1000/2000/4000Hz 입력 →<br/>
                 6분법 평균(내림, 최대 100) 자동 계산
@@ -1041,8 +1041,8 @@
           return ear;
         };
 
-        pair.appendChild(makeEar("좌", s.leftId));
-        pair.appendChild(makeEar("우", s.rightId));
+        pair.appendChild(makeEar("좌(X,□)", s.leftId));
+        pair.appendChild(makeEar("우(○,△)", s.rightId));
 
         sessionCard.appendChild(pair);
         sixContainer.appendChild(sessionCard);
