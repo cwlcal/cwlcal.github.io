@@ -709,18 +709,38 @@
       janghae: document.getElementById("page-janghae"),
     };
 
-    function go(pageKey){
+    function applyPage(pageKey){
       Object.values(pages).forEach(p => p.classList.remove("active"));
       (pages[pageKey] || pages.home).classList.add("active");
-      history.replaceState({}, "", "#" + pageKey);
       window.scrollTo({ top: 0, behavior: "auto" });
     }
-
-    function syncFromHash(){
-      const key = (location.hash || "#home").replace("#","");
-      if (!pages[key]) return go("home");
-      go(key);
+    
+    function go(pageKey){
+      // 홈은 해시를 지워서 "목차가 기본"이 되게 함
+      if(pageKey === "home"){
+        applyPage("home");
+        history.pushState({}, "", location.pathname); // ✅ 해시 제거 + 히스토리 유지
+        return;
+      }
+    
+      // 계산기들은 해시를 바꿔서 히스토리가 쌓이게 함 (뒤로가기 가능)
+      location.hash = "#" + pageKey; // ✅ 이게 포인트
     }
+    
+    function syncFromHash(){
+      const key = (location.hash || "").replace("#","");
+    
+      // 해시가 없으면 목차
+      if(!key){
+        applyPage("home");
+        return;
+      }
+    
+      // 유효한 해시(#grade/#six/#janghae 등)면 해당 페이지 표시
+      if(pages[key]) applyPage(key);
+      else applyPage("home");
+    }
+
 
     document.getElementById("btnHome").addEventListener("click", () => go("home"));
     document.querySelectorAll("[data-go]").forEach(btn=>{
